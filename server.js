@@ -1,7 +1,6 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const path = require('path');
+const cors = require('cors');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -10,34 +9,23 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-// База данных в оперативной памяти
 let db = {
     balance: 250,
     posts: []
 };
 
-// Получить данные
 app.get('/api/data', (req, res) => res.json(db));
 
-// Начислить монеты
-app.post('/api/balance', (req, res) => {
-    db.balance += (req.body.amount || 0);
-    res.json({ success: true, balance: db.balance });
-});
-
-// Загрузить фото в ленту
 app.post('/api/upload', (req, res) => {
     const newPost = {
         id: Date.now(),
-        image: req.body.image, // Base64 строка снимка
-        text: req.body.text || "Новое открытие в Sea Breeze!",
+        image: req.body.image,
+        user: req.body.lang === 'az' ? 'Tədqiqatçı' : (req.body.lang === 'en' ? 'Explorer' : 'Исследователь'),
         time: new Date().toLocaleTimeString()
     };
-    db.posts.unshift(newPost); // Добавляем в начало списка
-    db.balance += 50; // Бонус за активность
-    res.json({ success: true, post: newPost });
+    db.posts.unshift(newPost);
+    db.balance += 50;
+    res.json({ success: true });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Сервер запущен на порту ${PORT}`);
-});
+app.listen(PORT, "0.0.0.0", () => console.log(`Server on ${PORT}`));
