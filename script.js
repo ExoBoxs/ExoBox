@@ -1,85 +1,73 @@
-let currentStream = null;
+let stream = null;
 
-// Функция для включения камеры
-async function openScanner() {
-    const modal = document.getElementById('camera-modal');
-    const video = document.getElementById('video');
-    modal.style.display = 'block';
-
-    try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-        });
-        video.srcObject = currentStream;
-    } catch (err) {
-        alert("Ошибка доступа к камере: " + err);
-    }
-}
-
-// Функция СДЕЛАТЬ ФОТО и отправить на сервер
-async function capturePhoto() {
-    const video = document.getElementById('video');
-    const canvas = document.createElement('canvas');
-    
-    // Устанавливаем размер фото как у видео
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Рисуем кадр из видео на холст
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    
-    // Превращаем в строку (base64)
-    const imageData = canvas.toDataURL('image/jpeg', 0.7);
-
-    // Отправляем на сервер
-    const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            image: imageData, 
-            text: "Новое открытие в Sea Breeze!" 
-        })
-    });
-
-    if (response.ok) {
-        // Начисляем монеты за фото
-        await fetch('/api/balance', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ amount: 50 })
-        });
-        
-        alert("Фото опубликовано! +50 эко-монет");
-        closeScanner();
-        loadData(); // Обновляем ленту и баланс
-    }
-}
-
-function closeScanner() {
-    document.getElementById('camera-modal').style.display = 'none';
-    if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
-    }
-}
-
-// Загрузка данных (лента и баланс)
-async function loadData() {
-    const res = await fetch('/api/user');
+// Загрузка данных с сервера
+async function refreshData() {
+    const res = await fetch('/api/data');
     const data = await res.json();
     
     document.getElementById('balance-val').innerText = data.balance;
+    const container = document.getElementById('feed-container');
     
-    const feed = document.getElementById('feed-container');
-    feed.innerHTML = data.posts.map(post => `
+    container.innerHTML = data.posts.map(p => `
         <div class="post-card">
-            <img src="${post.image}" style="width:100%; border-radius:15px;">
-            <div style="padding:10px;">
-                <small>⏰ ${post.timestamp}</small>
-                <p>${post.text}</p>
+            <img src="${p.image}">
+            <div class="post-info">
+                <strong>Исследователь</strong> • ${p.time}<br>
+                ${p.text}
             </div>
         </div>
     `).join('');
 }
 
-// Запускаем загрузку при старте
-window.onload = loadData;
+// Камера
+async function openCamera() {
+    const overlay = document.getElementById('camera-overlay');
+    overlay.style.display = 'block';
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    document.getElementById('video').srcObject = stream;
+}
+
+function closeCamera() {
+    document.getElementById('camera-overlay').style.display = 'none';
+    if(stream) stream.getTracks().forEach(t => t.stop());
+}
+
+async function takeSnapshot() {
+    const video = document.getElementById('video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    const base64Image = canvas.toDataURL('image/jpeg', 0.7);
+
+    // Отправка на сервер
+    await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64Image, text: "Найдено редкое растение в Sea Breeze!" })
+    });
+
+    closeCamera();
+    refreshData();
+}
+
+// Фонарик
+async function toggleFlash() {
+    if(!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    }
+    const track = stream.getVideoTracks()[0];
+    const isOn = track.getSettings().torch;
+    await track.applyConstraints({ advanced: [{ torch: !isOn }] });
+}
+
+// Аудиогид
+function playAudio() {
+    const facts = ["В Sea Breeze более 100 видов растений!", "Береги море — не бросай пластик!", "Каспийская сосна растет очень медленно."];
+    const speech = new SpeechSynthesisUtterance(facts[Math.floor(Math.random()*facts.length)]);
+    speech.lang = 'ru-RU';
+    window.speechSynthesis.speak(speech);
+}
+
+window.onload = refreshData;
