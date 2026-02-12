@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Sea Breeze Eco Box</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">SEA BREEZE <span>ECO</span></div>
+            <div class="wallet">🪙 <span id="balance-val">0</span></div>
+        </header>
+
+        <nav class="tabs">
+            <button onclick="switchTab('tools')" class="active"><i class="fas fa-briefcase"></i></button>
+            <button onclick="switchTab('feed')"><i class="fas fa-stream"></i></button>
+            <button onclick="switchTab('map')"><i class="fas fa-map-marked-alt"></i></button>
+        </nav>
+
+        <section id="tools" class="content-tab active">
+            <div class="tool-grid">
+                <div class="tool-card" id="torch-btn">
+                    <div class="icon-circle"><i class="fas fa-lightbulb"></i></div>
+                    <span>Фонарик</span>
+                </div>
+                <div class="tool-card" id="audio-btn">
+                    <div class="icon-circle"><i class="fas fa-headset"></i></div>
+                    <span>Аудиогид</span>
+                </div>
+                <div class="tool-card" id="scan-btn">
+                    <div class="icon-circle"><i class="fas fa-microscope"></i></div>
+                    <span>AI Сканер</span>
+                </div>
+                <div class="tool-card" id="compass-btn">
+                    <div class="icon-circle"><i class="fas fa-compass" id="compass-arrow"></i></div>
+                    <span id="compass-text">Компас</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="feed" class="content-tab">
+            <h3>Лента находок</h3>
+            <div id="feed-container"></div>
+        </section>
+
+        <div id="camera-modal" class="modal">
+            <video id="video" autoplay playsinline></video>
+            <div class="camera-ui">
+                <button class="close-cam" onclick="closeScanner()">×</button>
+                <button class="shutter" onclick="capturePhoto()"></button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
