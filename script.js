@@ -127,39 +127,20 @@ const factsDB = {
     ]
 };
 
-const translations = {
-    ru: { welcome: "Привет, Герой!", "hero-text": "Экспедиция начинается.", "t-light": "Фонарик", "t-uv": "УФ-Свет", "t-audio": "Аудиогид", "feed-title": "Лента", "about-title": "О проекте", "about-text": "Эко-платформа для Sea Breeze." },
-    az: { welcome: "Salam, Qəhrəman!", "hero-text": "Ekspedisiya burada başlayır.", "t-light": "Fənər", "t-uv": "UB-İşıq", "t-audio": "Səsli bələdçi", "feed-title": "Xəbərlər", "about-title": "Layihə haqqında", "about-text": "Sea Breeze üçün eko platforma." },
-    en: { welcome: "Hello, Hero!", "hero-text": "Expedition starts here.", "t-light": "Flashlight", "t-uv": "UV-Light", "t-audio": "Audio Guide", "feed-title": "Feed", "about-title": "About", "about-text": "Eco-platform for Sea Breeze." }
-};
-
 let currentLang = 'ru';
 let stream = null;
-
-function changeLang() {
-    currentLang = document.getElementById('lang-select').value;
-    document.querySelectorAll('[data-key]').forEach(el => {
-        el.innerText = translations[currentLang][el.getAttribute('data-key')];
-    });
-}
 
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-    const activeTab = Array.from(document.querySelectorAll('.tab-item')).find(t => t.innerHTML.includes(getIcon(id)));
-    if(activeTab) activeTab.classList.add('active');
-    
     if (id === 'camera') startCamera(); else stopCamera();
     initData();
 }
 
-function getIcon(id) {
-    if(id==='home') return 'home';
-    if(id==='tools') return 'toolbox';
-    if(id==='camera') return 'camera';
-    if(id==='feed') return 'images';
-    if(id==='about') return 'info-circle';
+function toggleUV() {
+    const s = document.getElementById('uv-screen');
+    s.style.display = s.style.display === 'flex' ? 'none' : 'flex';
 }
 
 async function startCamera() {
@@ -178,54 +159,52 @@ async function takePhoto() {
     const canvas = document.createElement('canvas');
     canvas.width = v.videoWidth; canvas.height = v.videoHeight;
     canvas.getContext('2d').drawImage(v, 0, 0);
-    const img = canvas.toDataURL('image/jpeg', 0.6);
+    const img = canvas.toDataURL('image/jpeg', 0.5);
     await fetch('/api/upload', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ image: img, lang: currentLang })
     });
-    alert('OK! +50 🪙');
     showPage('feed');
 }
 
-async function toggleFlash() {
-    const track = stream?.getVideoTracks()[0];
-    if (track) {
-        try {
-            const isOn = track.getSettings().torch;
-            await track.applyConstraints({ advanced: [{ torch: !isOn }] });
-        } catch(e) { alert("Flash not supported"); }
-    } else { alert("Enable camera for flash"); }
-}
-
-function toggleUV() {
-    const f = document.getElementById('uv-filter');
-    f.style.display = f.style.display === 'block' ? 'none' : 'block';
-}
-
-function playAudio() {
-    const list = factsDB[currentLang];
-    const text = list[Math.floor(Math.random() * list.length)];
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = currentLang === 'az' ? 'tr-TR' : (currentLang === 'en' ? 'en-US' : 'ru-RU');
-    window.speechSynthesis.speak(msg);
-}
-
-window.addEventListener('deviceorientationabsolute', (e) => {
-    const head = e.alpha || e.webkitCompassHeading;
-    if(head) {
-        document.getElementById('comp-arrow').style.transform = `rotate(${-head}deg)`;
-        document.getElementById('comp-deg').innerText = Math.round(head) + '°';
+async function deletePost(id) {
+    if(confirm("Удалить фото?")) {
+        await fetch('/api/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id })
+        });
+        initData();
     }
-});
+}
 
 async function initData() {
     const res = await fetch('/api/data');
     const data = await res.json();
-    document.getElementById('balance-val').innerText = data.balance;
     document.getElementById('feed-list').innerHTML = data.posts.map(p => `
-        <div class="post-card"><img src="${p.image}"><div style="padding:10px"><b>${p.user}</b> • ${p.time}</div></div>
+        <div class="post-card">
+            <button class="del-btn" onclick="deletePost(${p.id})">×</button>
+            <img src="${p.image}">
+            <div style="padding:10px"><b>${p.user}</b> • ${p.time}</div>
+        </div>
     `).join('');
+}
+
+function playAudio() {
+    const list = factsDB[currentLang];
+    const msg = new SpeechSynthesisUtterance(list[Math.floor(Math.random()*list.length)]);
+    msg.lang = currentLang === 'az' ? 'tr-TR' : (currentLang === 'en' ? 'en-US' : 'ru-RU');
+    window.speechSynthesis.speak(msg);
+}
+
+// Фонарик (torch)
+async function toggleFlash() {
+    const track = stream?.getVideoTracks()[0];
+    if (track) {
+        const isOn = track.getSettings().torch;
+        await track.applyConstraints({ advanced: [{ torch: !isOn }] });
+    } else { alert("Включи камеру!"); }
 }
 
 initData();
