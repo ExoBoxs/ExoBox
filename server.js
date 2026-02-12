@@ -1,48 +1,43 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path'); // Добавили встроенный модуль path
+const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
 
-// Render сам назначит PORT, если нет — используем 3000
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' }));
-
-// Эта строка заставляет сервер отдавать index.html и скрипты из корня
+app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-// Имитация базы данных (в оперативной памяти)
+// База данных в оперативной памяти
 let db = {
     balance: 250,
     posts: []
 };
 
-// Эндпоинт для получения данных
-app.get('/api/user', (req, res) => res.json(db));
+// Получить данные
+app.get('/api/data', (req, res) => res.json(db));
 
-// Эндпоинт для обновления монет
+// Начислить монеты
 app.post('/api/balance', (req, res) => {
-    if (req.body.amount) {
-        db.balance += req.body.amount;
-    }
-    res.json({ success: true, newBalance: db.balance });
+    db.balance += (req.body.amount || 0);
+    res.json({ success: true, balance: db.balance });
 });
 
-// Эндпоинт для "загрузки" фото
+// Загрузить фото в ленту
 app.post('/api/upload', (req, res) => {
     const newPost = {
         id: Date.now(),
-        image: req.body.image,
-        text: req.body.text || "Новая находка!",
-        timestamp: new Date().toLocaleTimeString()
+        image: req.body.image, // Base64 строка снимка
+        text: req.body.text || "Новое открытие в Sea Breeze!",
+        time: new Date().toLocaleTimeString()
     };
-    db.posts.unshift(newPost);
-    res.json(newPost);
+    db.posts.unshift(newPost); // Добавляем в начало списка
+    db.balance += 50; // Бонус за активность
+    res.json({ success: true, post: newPost });
 });
 
-// Запуск сервера на всех интерфейсах (0.0.0.0 важно для Render)
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Sea Breeze Eco Box запущен на порту ${PORT}`);
+    console.log(`Сервер запущен на порту ${PORT}`);
 });
