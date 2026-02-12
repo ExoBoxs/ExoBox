@@ -9,45 +9,63 @@
 </head>
 <body>
 
+    <div id="uv-filter"></div>
+
     <header>
         <div class="logo">SEA BREEZE <span>ECO</span></div>
-        <div class="wallet">🪙 <span id="balance-val">250</span></div>
+        <select id="lang-select" onchange="changeLang()">
+            <option value="ru">RU</option>
+            <option value="az">AZ</option>
+            <option value="en">EN</option>
+        </select>
+        <div class="wallet">🪙 <span id="balance-val">0</span></div>
     </header>
 
-    <main id="main-content">
+    <section id="home" class="page active">
+        <div class="hero">
+            <h2 data-key="welcome">Добро пожаловать!</h2>
+            <p data-key="hero-text">Твоя экспедиция начинается здесь.</p>
+        </div>
+        <div class="quick-stats">
+            <div class="stat-card"><i class="fas fa-medal"></i><br>Rank: Junior</div>
+        </div>
+    </section>
+
+    <section id="tools" class="page">
         <div class="tool-grid">
-            <div class="tool-card" onclick="toggleFlash()">
-                <i class="fas fa-bolt"></i>
-                <span>Фонарик</span>
-            </div>
-            <div class="tool-card" onclick="playAudio()">
-                <i class="fas fa-volume-up"></i>
-                <span>Аудиогид</span>
-            </div>
-            <div class="tool-card" onclick="openCamera()">
-                <i class="fas fa-camera"></i>
-                <span>Эко-сканер</span>
-            </div>
-            <div class="tool-card" onclick="alert('Используй компас из Eco-Box!')">
-                <i class="fas fa-compass"></i>
-                <span>Компас</span>
-            </div>
+            <div class="tool-item" onclick="toggleFlash()"><i class="fas fa-bolt"></i><span data-key="t-light">Фонарик</span></div>
+            <div class="tool-item" onclick="toggleUV()"><i class="fas fa-eye"></i><span data-key="t-uv">УФ-свет</span></div>
+            <div class="tool-item" onclick="playAudio()"><i class="fas fa-headset"></i><span data-key="t-audio">Аудиогид</span></div>
+            <div class="tool-item" id="compass-card"><i class="fas fa-compass" id="comp-arrow"></i><span id="comp-deg">0°</span></div>
         </div>
+    </section>
 
-        <section class="feed-section">
-            <h3>Лента экспедиции</h3>
-            <div id="feed-container">
-                </div>
-        </section>
-    </main>
-
-    <div id="camera-overlay">
-        <video id="video" autoplay playsinline></video>
-        <div class="cam-btns">
-            <button class="close-btn" onclick="closeCamera()">×</button>
-            <button class="snap-btn" onclick="takeSnapshot()"></button>
+    <section id="camera" class="page">
+        <div class="cam-container">
+            <video id="video" autoplay playsinline></video>
+            <button class="snap-btn" onclick="takePhoto()"></button>
         </div>
-    </div>
+    </section>
+
+    <section id="feed" class="page">
+        <h3 data-key="feed-title">Лента открытий</h3>
+        <div id="feed-list"></div>
+    </section>
+
+    <section id="about" class="page">
+        <div class="card">
+            <h3 data-key="about-title">О проекте</h3>
+            <p data-key="about-text">Sea Breeze Eco Box — это твой путь к спасению природы через технологии.</p>
+        </div>
+    </section>
+
+    <nav class="tab-bar">
+        <div class="tab-item active" onclick="showPage('home')"><i class="fas fa-home"></i></div>
+        <div class="tab-item" onclick="showPage('tools')"><i class="fas fa-toolbox"></i></div>
+        <div class="tab-item" onclick="showPage('camera')"><i class="fas fa-camera"></i></div>
+        <div class="tab-item" onclick="showPage('feed')"><i class="fas fa-images"></i></div>
+        <div class="tab-item" onclick="showPage('about')"><i class="fas fa-info-circle"></i></div>
+    </nav>
 
     <script src="script.js"></script>
 </body>
